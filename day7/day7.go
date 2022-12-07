@@ -1,7 +1,6 @@
 package day7
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -9,10 +8,11 @@ import (
 	"github.com/ChuckBates/AdventOfCode2022/library"
 )
 
-var top = &Directory{"/", []int{}, []*Directory{}, ""}
+var top = &Directory{"/", []int{}, []*Directory{}, &Directory{}}
 var current = top
 
 func ComputePart1(input string) int {
+	top = &Directory{"/", []int{}, []*Directory{}, &Directory{}}
 	content := library.LoadFile(input)
 
 	newLineSeparator := regexp.MustCompile(`\n\s*`)
@@ -28,15 +28,39 @@ func ComputePart1(input string) int {
 		HandleLine(trimmedLine)
 	}
 
-	print(top)
 	return sumDirectoriesUnderHundredThousand(top)
 }
 
+func ComputePart2(input string) int {
+	top = &Directory{"/", []int{}, []*Directory{}, &Directory{}}
+	content := library.LoadFile(input)
+
+	newLineSeparator := regexp.MustCompile(`\n\s*`)
+	lines := newLineSeparator.Split(content, -1)
+
+	for _, line := range lines {
+		trimmedLine := strings.Trim(line, "\r")
+		if trimmedLine == "$ cd /" {
+			current = top
+			continue
+		}
+
+		HandleLine(trimmedLine)
+	}
+
+	totalSize := getDirectorySize(top)
+	unusedSpace := 70000000 - totalSize
+	totalSpaceNeeded := 30000000
+	deltaSpaceNeeded := totalSpaceNeeded - unusedSpace
+
+	return getSmallestDirectoryOverDelta(deltaSpaceNeeded, 70000000, top)
+}
+
 type Directory struct {
-	name           string
-	fileSizes      []int
-	subDirectories []*Directory
-	parentName     string
+	Name           string
+	FileSizes      []int
+	SubDirectories []*Directory
+	Parent         *Directory
 }
 
 func HandleLine(line string) {
@@ -57,13 +81,11 @@ func HandleCommand(line string) {
 	parts := strings.Split(line, " ")
 	if parts[1] == "cd" {
 		if parts[2] == ".." {
-			current = moveUpDirectory(current.parentName)
+			current = MoveUpDirectory()
 		} else {
 			containsSubDirectory, subDirectory := containsSubDirectory(parts[2])
 			if containsSubDirectory {
 				current = subDirectory
-			} else {
-				fmt.Println("Attempted to navigate to '", parts[2], "' from '", current.name, "' but was not present")
 			}
 		}
 	}
@@ -71,20 +93,19 @@ func HandleCommand(line string) {
 
 func HandleNewDirectory(line string) {
 	parts := strings.Split(line, " ")
-
-	current.subDirectories = append(current.subDirectories, &Directory{parts[1], []int{}, []*Directory{}, current.name})
+	current.SubDirectories = append(current.SubDirectories, &Directory{parts[1], []int{}, []*Directory{}, current})
 }
 
 func HandleFile(line string) {
 	parts := strings.Split(line, " ")
 
 	size, _ := strconv.Atoi(parts[0])
-	current.fileSizes = append(current.fileSizes, size)
+	current.FileSizes = append(current.FileSizes, size)
 }
 
 func containsSubDirectory(subDirectoryName string) (bool, *Directory) {
-	for _, subDirectory := range current.subDirectories {
-		if subDirectory.name == subDirectoryName {
+	for _, subDirectory := range current.SubDirectories {
+		if subDirectory.Name == subDirectoryName {
 			return true, subDirectory
 		}
 	}
@@ -92,21 +113,22 @@ func containsSubDirectory(subDirectoryName string) (bool, *Directory) {
 	return false, &Directory{}
 }
 
-func moveUpDirectory(parentName string) *Directory {
-	return findDirectoryByName(parentName, top)
+func MoveUpDirectory() *Directory {
+	return current.Parent
 }
 
-func findDirectoryByName(name string, position *Directory) *Directory {
-	for _, directory := range position.subDirectories {
-		if directory.name == name {
-			return directory
-		}
-
-		findDirectoryByName(name, directory)
+func getSmallestDirectoryOverDelta(delta int, currentSmallestSize int, directory *Directory) int {
+	smallestSize := currentSmallestSize
+	currentDirectorySize := getDirectorySize(directory)
+	if currentDirectorySize >= delta && currentDirectorySize < smallestSize {
+		smallestSize = currentDirectorySize
 	}
 
-	fmt.Println("No matching sub directory found for name '", name, "' in '", position.name, "'")
-	return position
+	for _, sub := range directory.SubDirectories {
+		smallestSize = getSmallestDirectoryOverDelta(delta, smallestSize, sub)
+	}
+
+	return smallestSize
 }
 
 func sumDirectoriesUnderHundredThousand(directory *Directory) int {
@@ -116,7 +138,7 @@ func sumDirectoriesUnderHundredThousand(directory *Directory) int {
 		sum += size
 	}
 
-	for _, sub := range directory.subDirectories {
+	for _, sub := range directory.SubDirectories {
 		sum += sumDirectoriesUnderHundredThousand(sub)
 	}
 
@@ -125,20 +147,31 @@ func sumDirectoriesUnderHundredThousand(directory *Directory) int {
 
 func getDirectorySize(directory *Directory) int {
 	size := 0
-	for _, s := range directory.fileSizes {
+	for _, s := range directory.FileSizes {
 		size += s
 	}
 
-	for _, sub := range directory.subDirectories {
+	for _, sub := range directory.SubDirectories {
 		size += getDirectorySize(sub)
 	}
 
 	return size
 }
 
-func print(directory *Directory) {
-	fmt.Println(directory.name, " ", directory.fileSizes)
-	for _, subDirectory := range directory.subDirectories {
-		print(subDirectory)
-	}
+//Test helper functions
+
+func GetCurrentDirectory() *Directory {
+	return current
+}
+
+func SetCurrentDirectory(directory *Directory) {
+	current = directory
+}
+
+func GetTopDirectory() *Directory {
+	return top
+}
+
+func SetTopDirectory(directory *Directory) {
+	top = directory
 }
