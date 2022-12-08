@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/ChuckBates/AdventOfCode2022/day7"
+	"github.com/ChuckBates/AdventOfCode2022/day8"
 )
 
 func main() {
@@ -19,6 +19,8 @@ func main() {
 	// fmt.Println("Day 5 part 2: ", day5.ComputePart2("day5/input.txt"))
 	// fmt.Println("Day 6 part 1: ", day6.ComputePart1("day6/input.txt"))
 	// fmt.Println("Day 6 part 2: ", day6.ComputePart2("day6/input.txt"))
-	fmt.Println("Day 7 part 1: ", day7.ComputePart1("day7/input.txt"))
-	fmt.Println("Day 7 part 2: ", day7.ComputePart2("day7/input.txt"))
+	// fmt.Println("Day 7 part 1: ", day7.ComputePart1("day7/input.txt"))
+	// fmt.Println("Day 7 part 2: ", day7.ComputePart2("day7/input.txt"))
+	fmt.Println("Day 8 part 1: ", day8.ComputePart1("day8/input.txt"))
+	fmt.Println("Day 8 part 2: ", day8.ComputePart2("day8/input.txt"))
 }
