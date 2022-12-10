@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-func ComputePart1() int {
-	content, err := os.ReadFile("day1/part1.txt")
+func ComputePart1(input string) int {
+	content, err := os.ReadFile(input)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,8 +37,8 @@ func ComputePart1() int {
 	return highest
 }
 
-func ComputePart2() int {
-	content, err := os.ReadFile("day1/part1.txt")
+func ComputePart2(input string) int {
+	content, err := os.ReadFile(input)
 	if err != nil {
 		log.Fatal(err)
 	}
